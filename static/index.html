@@ -14,13 +14,13 @@
     <![endif]-->
     <style>
         :root {
-            --bg: #0f1117;
-            --bg-card: #181b24;
-            --bg-card-hover: #1e2230;
-            --border: #2a2e3a;
-            --text: #c8ccd4;
-            --text-dim: #6b7280;
-            --text-bright: #f0f2f5;
+            --bg: #262626;
+            --bg-card: #303030;
+            --bg-card-hover: #3a3a3a;
+            --border: #484848;
+            --text: #d4d4d4;
+            --text-dim: #8a8a8a;
+            --text-bright: #f2f2f2;
             --accent: #3b82f6;
             --green: #22c55e;
             --yellow: #eab308;
@@ -34,8 +34,6 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             margin: 0; padding: 0; font-size: 13px;
         }
-
-        /* ── Top bar ── */
         .topbar {
             background: var(--bg-card);
             border-bottom: 1px solid var(--border);
@@ -51,8 +49,6 @@
             display: inline-block; animation: pulse 2s ease-in-out infinite;
         }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-        /* ── Dashboard ── */
         .dashboard {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
             gap: 12px; padding: 16px 24px;
@@ -69,17 +65,22 @@
         .stat-value.yellow { color: var(--yellow); }
         .stat-value.accent { color: var(--accent); }
         .stat-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-
-        /* ── Active transfers ── */
+        .stat-last-wrap { position: relative; cursor: default; }
+        .stat-last-wrap .stat-tooltip {
+            display: none; position: absolute; bottom: 100%; left: 0;
+            background: #1a1a1a; color: var(--text-bright);
+            padding: 6px 10px; border-radius: 4px; font-size: 12px; font-weight: 400;
+            white-space: nowrap; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            margin-bottom: 4px; max-width: 500px; overflow: hidden; text-overflow: ellipsis;
+        }
+        .stat-last-wrap:hover .stat-tooltip { display: block; }
         .active-panel { padding: 0 24px 12px; }
         .active-panel h3 { font-size: 13px; font-weight: 600; color: var(--text-bright); margin: 0 0 10px; }
         .active-job {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
             padding: 12px 16px; margin-bottom: 8px;
             display: grid; grid-template-columns: 1fr 220px 110px; align-items: center; gap: 16px;
-            animation: slideIn 0.3s ease-out;
         }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
         .active-job-name { font-weight: 600; color: var(--text-bright); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .active-job-source { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
         .progress-wrap { display: flex; flex-direction: column; gap: 4px; }
@@ -94,19 +95,16 @@
         .progress-bar-fill.stuck { background: linear-gradient(90deg, var(--red), #f87171); }
         .progress-bar-fill::after {
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-            animation: shimmer 1.8s infinite;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+            animation: shimmer 2s infinite;
         }
         @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .progress-text { font-size: 11px; color: var(--text-dim); display: flex; justify-content: space-between; }
         .progress-label-frame { font-size: 10px; color: #06b6d4; }
         .eta-value { font-size: 13px; font-weight: 600; color: var(--text-bright); text-align: right; }
         .eta-label { font-size: 11px; color: var(--text-dim); text-align: right; }
-
-        /* ── Table ── */
         .table-wrap { padding: 0 24px 24px; }
         .tabledom { width: 100%; margin-left: 0; margin-top: 7px; }
-
         table.dataTable { border-collapse: collapse !important; width: 100% !important; }
         table.dataTable thead th {
             background: var(--bg-card) !important; color: var(--text-dim) !important;
@@ -124,16 +122,12 @@
         table.dataTable tbody tr.row-error td:first-child   { box-shadow: inset 3px 0 0 var(--red); }
         table.dataTable tbody tr.row-warning td:first-child  { box-shadow: inset 3px 0 0 var(--yellow); }
         table.dataTable tbody tr.row-info td:first-child     { box-shadow: inset 3px 0 0 var(--accent); }
-
         .status-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
         .status-badge.good    { background: rgba(34,197,94,0.15); color: var(--green); }
         .status-badge.error   { background: rgba(239,68,68,0.15); color: var(--red); }
         .status-badge.warning { background: rgba(234,179,8,0.15); color: var(--yellow); }
         .status-badge.info    { background: rgba(59,130,246,0.15); color: var(--accent); }
-
         .duration-cell { font-variant-numeric: tabular-nums; font-family: "SF Mono","Fira Code","Consolas",monospace; font-size: 12px; }
-
-        /* DT controls */
         .dataTables_wrapper .dataTables_length,
         .dataTables_wrapper .dataTables_filter,
         .dataTables_wrapper .dataTables_info,
@@ -143,16 +137,24 @@
             background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
             border-radius: 4px; padding: 4px 8px;
         }
+        .dataTables_wrapper .dataTables_paginate { padding-top: 8px; }
         .dataTables_wrapper .dataTables_paginate .paginate_button {
-            color: var(--text-dim) !important; border: 1px solid var(--border) !important;
-            background: var(--bg-card) !important; border-radius: 4px !important;
-            margin: 0 2px !important; padding: 4px 10px !important;
+            color: var(--text-dim) !important; border: none !important;
+            background: transparent !important; border-radius: 4px !important;
+            margin: 0 1px !important; padding: 4px 10px !important; min-width: auto !important;
         }
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
-        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-            background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important;
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: var(--accent) !important; color: #fff !important;
         }
-        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled { opacity: 0.3 !important; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
+            background: var(--bg-card-hover) !important; color: var(--text-bright) !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+            opacity: 0.25 !important; cursor: default !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .ellipsis {
+            color: var(--text-dim) !important; padding: 4px 6px !important;
+        }
         .dt-buttons .btn, .dt-buttons .dt-button {
             background: var(--bg-card) !important; color: var(--text) !important;
             border: 1px solid var(--border) !important; border-radius: 4px !important;
@@ -162,19 +164,10 @@
         .dt-buttons .btn.active, .dt-buttons .dt-button.active { background: var(--accent) !important; color: #fff !important; }
         .dt-button-collection { background: var(--bg-card) !important; border: 1px solid var(--border) !important; border-radius: 6px !important; padding: 4px !important; }
         .dt-button-collection .dt-button { border: none !important; border-radius: 4px !important; }
-
         .modal-content { background: var(--bg-card); border: 1px solid var(--border); color: var(--text); border-radius: 8px; }
         .modal-header { border-bottom-color: var(--border); }
         .modal-header .close { color: var(--text-dim); opacity: 0.8; text-shadow: none; }
         .modal-title { color: var(--text-bright); }
-
-        .notif-btn {
-            background: none; border: 1px solid var(--border); border-radius: 4px;
-            color: var(--text-dim); cursor: pointer; padding: 4px 8px; font-size: 12px; transition: all 0.15s;
-        }
-        .notif-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .notif-btn.active { border-color: var(--green); color: var(--green); }
-
         @media (max-width: 768px) {
             .dashboard { grid-template-columns: repeat(2, 1fr); padding: 12px; }
             .table-wrap, .active-panel { padding: 0 12px 12px; }
@@ -184,16 +177,13 @@
     </style>
 </head>
 <body>
-
 <div class="topbar">
     <div class="topbar-title">PyLog<span>Jobs</span> <span style="font-size:11px;font-weight:400;color:var(--text-dim)">v2</span></div>
     <div class="topbar-meta">
-        <button class="notif-btn" id="notifBtn" title="Desktop-Benachrichtigungen bei Fehlern">&#128276; Benachrichtigungen</button>
         <span><span class="refresh-dot"></span> Auto-Refresh 5s</span>
         <span id="lastUpdate">—</span>
     </div>
 </div>
-
 <div class="dashboard">
     <div class="stat-card">
         <div class="stat-label">Aktive Transfers</div>
@@ -214,33 +204,24 @@
     </div>
     <div class="stat-card">
         <div class="stat-label">Letzter Transfer</div>
-        <div class="stat-value" id="statLast" style="font-size:14px">—</div>
+        <div class="stat-last-wrap">
+            <div class="stat-tooltip" id="statLastFull"></div>
+            <div class="stat-value" id="statLast" style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+        </div>
         <div class="stat-sub" id="statLastSub"></div>
     </div>
 </div>
-
 <div class="active-panel" id="activePanel" style="display:none">
     <h3>&#9654; Laufende Transfers</h3>
     <div id="activeTransfers"></div>
 </div>
-
 <div class="table-wrap">
     <table id="jobstable" style="width:100%">
-        <thead>
-            <tr>
-                <th>Start</th>
-                <th>Name</th>
-                <th>Quelle</th>
-                <th>Engine</th>
-                <th>Ende</th>
-                <th>Status</th>
-                <th>Typ</th>
-                <th>Dauer</th>
-            </tr>
-        </thead>
+        <thead><tr>
+            <th>Start</th><th>Name</th><th>Quelle</th><th>Engine</th><th>Ende</th><th>Status</th><th>Typ</th><th>Dauer</th>
+        </tr></thead>
     </table>
 </div>
-
 <div class="modal fade" id="myModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -252,20 +233,16 @@
         </div>
     </div>
 </div>
-
 <script src="js/jquery.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script type="text/javascript" src="DataTables/datatables.min.js"></script>
-
 <script>
 (function() {
     'use strict';
-
-    var notificationsEnabled = false;
     var knownErrors = {};
-    var sourceAvgs = {};  // filled from /api/stats
+    var sourceAvgs = {};
+    var activeJobEls = {};
 
-    // ── Helpers ──
     function fmtDur(s) {
         if (!s || s < 0) return '—';
         s = Math.round(s);
@@ -285,194 +262,152 @@
         if (diff < 86400) return Math.floor(diff/3600) + ' Std.';
         return Math.floor(diff/86400) + ' Tage';
     }
-
-    // ── Notifications ──
-    var notifBtn = document.getElementById('notifBtn');
-    notifBtn.onclick = function() {
-        if (!('Notification' in window)) { alert('Browser unterstützt keine Benachrichtigungen.'); return; }
+    function notifyError(title, body) {
+        if (!('Notification' in window)) return;
         if (Notification.permission === 'granted') {
-            notificationsEnabled = !notificationsEnabled;
-            this.classList.toggle('active', notificationsEnabled);
-        } else if (Notification.permission !== 'denied') {
-            Notification.requestPermission().then(function(p) {
-                if (p === 'granted') { notificationsEnabled = true; notifBtn.classList.add('active'); }
-            });
+            try { new Notification(title, {body:body, icon:'favicon.ico'}); } catch(e) {}
+        } else if (Notification.permission === 'default') {
+            Notification.requestPermission();
         }
-    };
-    function notify(title, body) {
-        if (notificationsEnabled) try { new Notification(title, {body:body, icon:'favicon.ico'}); } catch(e) {}
     }
 
-    // ── Dashboard via /api/stats ──
     function refreshStats() {
         $.getJSON('/api/stats', function(d) {
             $('#statActive').text(d.active);
             $('#statCompleted').text(d.today_completed);
             $('#statFailed').text(d.today_failed);
-
             if (d.avg_duration_today) {
                 $('#statAvgDuration').text(fmtDur(d.avg_duration_today));
                 $('#statAvgSub').text('heute');
             } else {
-                $('#statAvgDuration').text('—');
-                $('#statAvgSub').text('');
+                $('#statAvgDuration').text('—'); $('#statAvgSub').text('');
             }
-
             if (d.last_completed) {
                 var n = d.last_completed.clip_name;
-                $('#statLast').text(n.length > 28 ? n.substring(0,28) + '…' : n);
+                var short = n.length > 30 ? n.substring(0,30) + '…' : n;
+                $('#statLast').text(short).attr('title', n);
+                $('#statLastFull').text(n);
                 $('#statLastSub').text(timeSince(d.last_completed.end_time) + ' her');
             }
-
             if (d.avg_by_source) sourceAvgs = d.avg_by_source;
         });
     }
 
-    // ── Active transfers via /api/active ──
     function refreshActive() {
         $.getJSON('/api/active', function(jobs) {
             var panel = $('#activePanel');
             var container = $('#activeTransfers');
-
             if (!jobs || jobs.length === 0) {
-                panel.hide();
-                return;
+                panel.hide(); activeJobEls = {}; container.empty(); return;
             }
             panel.show();
-
-            var html = '';
+            var currentIds = {};
             for (var i = 0; i < jobs.length; i++) {
-                var j = jobs[i];
+                var j = jobs[i], jid = j.id;
+                currentIds[jid] = true;
                 var start = parseD(j.start_time);
                 var elapsed = start ? (Date.now() - start) / 1000 : 0;
                 var expected = sourceAvgs[j.source] || 300;
-
-                // Frame-based progress if available
                 var hasFrames = j.current_frames && j.max_frames && j.max_frames > 0;
                 var pct, barClass = '', isFrameBased = false;
-
                 if (hasFrames) {
                     pct = Math.min(Math.round((j.current_frames / j.max_frames) * 100), 99);
-                    barClass = 'frame-based';
-                    isFrameBased = true;
+                    barClass = 'frame-based'; isFrameBased = true;
                 } else {
                     pct = Math.min(Math.round((elapsed / expected) * 100), 99);
                     if (elapsed > expected * 1.5) barClass = 'stuck';
                     else if (elapsed > expected) barClass = 'slow';
                 }
-
-                // ETA
                 var etaText;
                 if (hasFrames) {
-                    // Frames-based ETA: extrapolate from elapsed time and frames done
-                    var framesPerSec = j.current_frames / Math.max(elapsed, 1);
-                    var remaining = (j.max_frames - j.current_frames) / Math.max(framesPerSec, 0.01);
-                    etaText = '~' + fmtDur(remaining);
+                    var fps = j.current_frames / Math.max(elapsed, 1);
+                    etaText = '~' + fmtDur((j.max_frames - j.current_frames) / Math.max(fps, 0.01));
                 } else {
                     var rem = Math.max(expected - elapsed, 0);
                     if (elapsed > expected * 1.5) etaText = 'evtl. hängt';
                     else if (rem > 0) etaText = '~' + fmtDur(rem);
                     else etaText = 'überfällig';
                 }
-
                 var progLabel = isFrameBased
-                    ? '<span class="progress-label-frame">Frame-basiert: ' + j.current_frames + ' / ' + j.max_frames + '</span>'
-                    : '<span>' + pct + '% (geschätzt)</span>';
+                    ? 'Frames: ' + j.current_frames + ' / ' + j.max_frames
+                    : pct + '% (geschätzt)';
 
-                html += '<div class="active-job">' +
-                    '<div>' +
-                        '<div class="active-job-name" title="' + esc(j.clip_name) + '">' + esc(j.clip_name) + '</div>' +
-                        '<div class="active-job-source">' + esc(j.source) + ' &#x2022; ' + esc(j.engine) + ' &#x2022; ' + esc(j.start_time) + '</div>' +
-                    '</div>' +
-                    '<div class="progress-wrap">' +
-                        '<div class="progress-bar-bg"><div class="progress-bar-fill ' + barClass + '" style="width:' + pct + '%"></div></div>' +
-                        '<div class="progress-text"><span>' + fmtDur(elapsed) + ' vergangen</span>' + progLabel + '</div>' +
-                    '</div>' +
-                    '<div>' +
-                        '<div class="eta-value">' + etaText + '</div>' +
-                        '<div class="eta-label">verbleibend</div>' +
-                    '</div>' +
-                '</div>';
+                if (activeJobEls[jid]) {
+                    var el = activeJobEls[jid];
+                    el.find('.pbar-fill').attr('class','progress-bar-fill pbar-fill ' + barClass).css('width', pct + '%');
+                    el.find('.pbar-elapsed').text(fmtDur(elapsed) + ' vergangen');
+                    el.find('.pbar-pct').text(progLabel);
+                    el.find('.eta-value').text(etaText);
+                } else {
+                    var html = '<div class="active-job" data-jid="' + jid + '">' +
+                        '<div><div class="active-job-name" title="' + esc(j.clip_name) + '">' + esc(j.clip_name) + '</div>' +
+                        '<div class="active-job-source">' + esc(j.source) + ' &#x2022; ' + esc(j.engine) + ' &#x2022; ' + esc(j.start_time) + '</div></div>' +
+                        '<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill pbar-fill ' + barClass + '" style="width:' + pct + '%"></div></div>' +
+                        '<div class="progress-text"><span class="pbar-elapsed">' + fmtDur(elapsed) + ' vergangen</span><span class="pbar-pct">' + progLabel + '</span></div></div>' +
+                        '<div><div class="eta-value">' + etaText + '</div><div class="eta-label">verbleibend</div></div></div>';
+                    var $el = $(html);
+                    container.append($el);
+                    activeJobEls[jid] = $el;
+                }
             }
-            container.html(html);
+            for (var oldId in activeJobEls) {
+                if (!currentIds[oldId]) { activeJobEls[oldId].remove(); delete activeJobEls[oldId]; }
+            }
         });
     }
 
-    // ── DataTable ──
     $(document).ready(function() {
         $('#myModal').on('hidden.bs.modal', function() { $('#myModal .modal-body').text('Laden...'); });
-
         var table = $('#jobstable').DataTable({
             lengthMenu: [10, 25, 50, 100, 500, 1000],
             fixedHeader: true,
             order: [[0, 'desc']],
             dom: '<"row tabledom"<"col-md-4"l><"col-md-4 text-center"B><"col-md-4"f>>rt<"row tabledom"<"col-md-6"i><"col-md-6"p>>',
+            pagingType: 'simple_numbers',
             buttons: [
-                {
-                    extend: 'collection', text: 'Export',
-                    buttons: [
-                        { extend: 'csv', exportOptions: { columns: ':visible' } },
-                        { extend: 'excel', exportOptions: { columns: ':visible' } },
-                        { extend: 'pdf', exportOptions: { columns: ':visible' } }
-                    ]
-                },
-                {
-                    extend: 'collection', text: 'Spalten',
-                    buttons: [{ extend: 'columnsToggle', columns: [0,1,2,3,4,5,7] }]
-                },
-                {
-                    extend: 'collection', text: 'Filter',
-                    buttons: [
-                        { text: 'Nur Fehler', action: function(e,dt){ this.active(!this.active()); dt.ajax.reload(); } },
-                        { text: 'Letzte 24h', action: function(e,dt){ this.active(!this.active()); $('#jobstable').DataTable().button('2-2').active(false); dt.ajax.reload(); } },
-                        { text: 'Nur heute', action: function(e,dt){ this.active(!this.active()); $('#jobstable').DataTable().button('2-1').active(false); dt.ajax.reload(); } }
-                    ]
-                },
+                { extend: 'collection', text: 'Export', buttons: [
+                    { extend: 'csv', exportOptions: { columns: ':visible' } },
+                    { extend: 'excel', exportOptions: { columns: ':visible' } },
+                    { extend: 'pdf', exportOptions: { columns: ':visible' } }
+                ]},
+                { extend: 'collection', text: 'Spalten', buttons: [{ extend: 'columnsToggle', columns: [0,1,2,3,4,5,7] }] },
+                { extend: 'collection', text: 'Filter', buttons: [
+                    { text: 'Nur Fehler', action: function(e,dt){ this.active(!this.active()); dt.ajax.reload(); } },
+                    { text: 'Letzte 24h', action: function(e,dt){ this.active(!this.active()); $('#jobstable').DataTable().button('2-2').active(false); dt.ajax.reload(); } },
+                    { text: 'Nur heute', action: function(e,dt){ this.active(!this.active()); $('#jobstable').DataTable().button('2-1').active(false); dt.ajax.reload(); } }
+                ]},
                 { text: 'Zusammenfassung', action: function() { $('#myModal').modal(); $('#myModal .modal-body').load('summary'); } }
             ],
-            deferRender: true,
-            orderMulti: false,
-            serverSide: true,
-            ajax: {
-                url: 'jobs',
-                data: function(d) {
-                    d.only_failures     = $('#jobstable').DataTable().button('2-0').active();
-                    d.twenty_four_hours = $('#jobstable').DataTable().button('2-1').active();
-                    d.today_only        = $('#jobstable').DataTable().button('2-2').active();
-                }
-            },
+            deferRender: true, orderMulti: false, serverSide: true,
+            ajax: { url: 'jobs', data: function(d) {
+                d.only_failures = $('#jobstable').DataTable().button('2-0').active();
+                d.twenty_four_hours = $('#jobstable').DataTable().button('2-1').active();
+                d.today_only = $('#jobstable').DataTable().button('2-2').active();
+            }},
             columnDefs: [
                 { visible: false, targets: 6 },
-                {
-                    targets: 5,
-                    render: function(data, type, row) {
-                        var lv = row[6] || 'info';
-                        var short = data && data.length > 50 ? data.substring(0,50) + '…' : data;
-                        return '<span class="status-badge ' + esc(lv) + '" title="' + esc(data) + '">' + esc(short) + '</span>';
+                { targets: 5, render: function(data, type, row) {
+                    var lv = row[6] || 'info';
+                    var short = data && data.length > 50 ? data.substring(0,50) + '…' : data;
+                    return '<span class="status-badge ' + esc(lv) + '" title="' + esc(data) + '">' + esc(short) + '</span>';
+                }},
+                { targets: 7, data: null, orderable: false, render: function(data, type, row) {
+                    var d = durSecs(row[0], row[4]);
+                    if (d === null) {
+                        var s = parseD(row[0]);
+                        if (s) return '<span class="duration-cell" style="color:var(--accent)">' + fmtDur((Date.now()-s)/1000) + ' &#9650;</span>';
+                        return '—';
                     }
-                },
-                {
-                    targets: 7, data: null, orderable: false,
-                    render: function(data, type, row) {
-                        var d = durSecs(row[0], row[4]);
-                        if (d === null) {
-                            var s = parseD(row[0]);
-                            if (s) return '<span class="duration-cell" style="color:var(--accent)">' + fmtDur((Date.now()-s)/1000) + ' &#9650;</span>';
-                            return '—';
-                        }
-                        return '<span class="duration-cell">' + fmtDur(d) + '</span>';
-                    }
-                }
+                    return '<span class="duration-cell">' + fmtDur(d) + '</span>';
+                }}
             ],
             fnRowCallback: function(nRow, aData) {
                 var lv = aData[6] || '';
                 $(nRow).removeClass('row-good row-error row-warning row-info');
                 if (lv) $(nRow).addClass('row-' + lv);
-
-                // Notify on new errors
                 if (lv === 'error' && !knownErrors[aData[0]+aData[1]]) {
                     knownErrors[aData[0]+aData[1]] = true;
-                    notify('Transfer fehlgeschlagen', aData[1] + '\n' + aData[5]);
+                    notifyError('Transfer fehlgeschlagen', aData[1] + '\n' + aData[5]);
                 }
                 return nRow;
             },
@@ -480,27 +415,21 @@
                 lengthMenu: '_MENU_ Einträge', search: 'Suchen:',
                 info: '_START_ bis _END_ von _TOTAL_', infoEmpty: 'Keine Einträge',
                 infoFiltered: '(gefiltert aus _MAX_)',
-                paginate: { first: '«', previous: '‹', next: '›', last: '»' },
+                paginate: { previous: '‹', next: '›' },
                 zeroRecords: 'Keine Transfers gefunden'
             }
         });
-
-        // Refresh loop
         function tick() {
-            refreshStats();
-            refreshActive();
+            refreshStats(); refreshActive();
             table.ajax.reload(function() {
                 $('#lastUpdate').text(new Date().toLocaleTimeString('de-DE'));
                 setTimeout(tick, 5000);
             }, false);
         }
-        // Initial
-        refreshStats();
-        refreshActive();
+        refreshStats(); refreshActive();
         $('#lastUpdate').text(new Date().toLocaleTimeString('de-DE'));
         setTimeout(tick, 5000);
     });
-
 })();
 </script>
 </body>
