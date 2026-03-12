@@ -1,0 +1,14 @@
+# Binary files
+*.exe binary
+*.ico binary
+*.png binary
+*.eot binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.swf binary
+*.map binary
+
+# Windows line endings for batch files
+*.bat text eol=crlf
+*.ini text eol=crlf
