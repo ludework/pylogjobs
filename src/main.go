@@ -22,14 +22,16 @@ import (
 // ---------------------------------------------------------------------------
 
 type Config struct {
-	LogDir string
-	Port   int
+	LogDir  string
+	Port    int
+	MaxDays int
 }
 
 func loadConfig() Config {
 	cfg := Config{
-		LogDir: `C:\Program Files\Marquis\Logs`,
-		Port:   8023,
+		LogDir:  `C:\Program Files\Marquis\Logs`,
+		Port:    8023,
+		MaxDays: 7,
 	}
 
 	// Read INI file next to executable
@@ -60,6 +62,15 @@ func loadConfig() Config {
 					}
 				}
 			}
+			if strings.HasPrefix(line, "max_days") {
+				parts := strings.SplitN(line, "=", 2)
+				if len(parts) == 2 {
+					d, err := strconv.Atoi(strings.TrimSpace(parts[1]))
+					if err == nil && d > 0 {
+						cfg.MaxDays = d
+					}
+				}
+			}
 		}
 		log.Printf("Loaded config from %s", iniPath)
 	}
@@ -77,6 +88,13 @@ func loadConfig() Config {
 		case "--log-dir":
 			if i+1 < len(os.Args)-1 {
 				cfg.LogDir = os.Args[i+2]
+			}
+		case "--max-days":
+			if i+1 < len(os.Args)-1 {
+				d, err := strconv.Atoi(os.Args[i+2])
+				if err == nil && d > 0 {
+					cfg.MaxDays = d
+				}
 			}
 		}
 	}
@@ -292,12 +310,33 @@ func buildDatetime(monthStr string, dayStr string, timeStr string, year int) str
 	return fmt.Sprintf("%04d-%02d-%02d %s", year, month, day, timeStr)
 }
 
-func parseLogFiles(store *Store, logDir string) {
+func dateFromFilename(name string) time.Time {
+	m := filenameDateRE.FindStringSubmatch(name)
+	if m != nil {
+		day, _ := strconv.Atoi(m[1])
+		month, _ := strconv.Atoi(m[2])
+		year, _ := strconv.Atoi(m[3])
+		return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
+	}
+	return time.Time{}
+}
+
+func parseLogFiles(store *Store, logDir string, maxDays int) {
 	pattern := filepath.Join(logDir, "Marquis *.log")
 	files, err := filepath.Glob(pattern)
 	if err != nil {
 		log.Printf("Glob error: %v", err)
 		return
+	}
+
+	// Sort by date descending, keep only newest maxDays
+	sort.Slice(files, func(i, k int) bool {
+		di := dateFromFilename(filepath.Base(files[i]))
+		dk := dateFromFilename(filepath.Base(files[k]))
+		return di.After(dk)
+	})
+	if len(files) > maxDays {
+		files = files[:maxDays]
 	}
 
 	for _, fpath := range files {
@@ -847,7 +886,7 @@ func main() {
 	cfg := loadConfig()
 
 	log.Printf("PyLogJobs v2")
-	log.Printf("Log directory : %s", cfg.LogDir)
+	log.Printf("Log directory : %s (max %d days)", cfg.LogDir, cfg.MaxDays)
 	log.Printf("Port          : %d", cfg.Port)
 
 	// Determine static dir (next to executable, then CWD)
@@ -862,7 +901,7 @@ func main() {
 
 	// Initial parse
 	if _, err := os.Stat(cfg.LogDir); err == nil {
-		parseLogFiles(store, cfg.LogDir)
+		parseLogFiles(store, cfg.LogDir, cfg.MaxDays)
 		log.Printf("Initial parse: %d jobs, %d duration entries",
 			len(store.jobs), len(store.durations))
 	} else {
@@ -879,7 +918,7 @@ func main() {
 	go func() {
 		for {
 			time.Sleep(5 * time.Second)
-			parseLogFiles(store, cfg.LogDir)
+			parseLogFiles(store, cfg.LogDir, cfg.MaxDays)
 			// Periodic stale cleanup
 			store.CleanupStale(24 * time.Hour)
 		}

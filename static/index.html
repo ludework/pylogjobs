@@ -27,6 +27,20 @@
             --red: #ef4444;
             --orange: #f97316;
         }
+        body.light {
+            --bg: #f5f5f5;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f0f0f0;
+            --border: #e0e0e0;
+            --text: #555555;
+            --text-dim: #999999;
+            --text-bright: #1a1a1a;
+        }
+        .theme-btn {
+            background: none; border: 1px solid var(--border); border-radius: 5px;
+            color: var(--text-dim); cursor: pointer; padding: 2px 8px; font-size: 13px; line-height: 1.4;
+        }
+        .theme-btn:hover { border-color: var(--accent); color: var(--text-bright); }
         * { box-sizing: border-box; }
         body {
             background: var(--bg);
@@ -180,6 +194,7 @@
 <div class="topbar">
     <div class="topbar-title">PyLog<span>Jobs</span> <span style="font-size:11px;font-weight:400;color:var(--text-dim)">v2</span></div>
     <div class="topbar-meta">
+        <button class="theme-btn" id="themeBtn" title="Dark/Light">&#127769;</button>
         <span><span class="refresh-dot"></span> Auto-Refresh 5s</span>
         <span id="lastUpdate">—</span>
     </div>
@@ -239,6 +254,19 @@
 <script>
 (function() {
     'use strict';
+
+    // Dark/Light Theme
+    var theme = localStorage.getItem('pylog_theme') || 'dark';
+    function setTheme(t) {
+        theme = t;
+        localStorage.setItem('pylog_theme', t);
+        document.body.classList.toggle('light', t === 'light');
+        document.getElementById('themeBtn').innerHTML = t === 'light' ? '&#9728;' : '&#127769;';
+    }
+    setTheme(theme);
+    document.getElementById('themeBtn').addEventListener('click', function() {
+        setTheme(theme === 'dark' ? 'light' : 'dark');
+    });
     var knownErrors = {};
     var sourceAvgs = {};
     var activeJobEls = {};
